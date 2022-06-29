@@ -1,4 +1,4 @@
-from calcoperator import CalcOperator
+from base.calcoperator import CalcOperator
 import numpy as np
 
 

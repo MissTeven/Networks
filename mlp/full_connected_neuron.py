@@ -1,7 +1,6 @@
-from activator import SigmoidActivator
-from calcoperator import CalcOperator
+from base.activator import SigmoidActivator
+from base.calcoperator import CalcOperator
 from full_connected_liner import FullConnectedLiner
-from normalize import Normalize
 
 
 class FullConnectedNeuron(CalcOperator):

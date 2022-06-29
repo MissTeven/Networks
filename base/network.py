@@ -1,7 +1,7 @@
 import abc
 
-from learning_rate import ConstantLearningRate
-from loss import QuadraticLoss
+from base.learning_rate import ConstantLearningRate
+from base.loss import QuadraticLoss
 
 
 class Network(abc.ABC):

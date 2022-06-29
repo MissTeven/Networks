@@ -1,8 +1,8 @@
-from activator import TanhActivator, ReluActivator
+from base.activator import ReluActivator
 from full_connected_neuron import FullConnectedNeuron
-from learning_rate import ConstantLearningRate
-from loss import QuadraticLoss
-from network import Network
+from base.learning_rate import ConstantLearningRate
+from base.loss import QuadraticLoss
+from base.network import Network
 import numpy as np
 
 

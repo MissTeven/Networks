@@ -1,5 +1,4 @@
-from calcoperator import CalcOperator
-import numpy as np
+from base.calcoperator import CalcOperator
 
 
 class FullConnectedLiner(CalcOperator):

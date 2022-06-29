@@ -1,7 +1,7 @@
 # Press the green button in the gutter to run the script.
 import numpy as np
 
-from activator import SigmoidActivator, TanhActivator
+from base.activator import SigmoidActivator
 from mlp import MLP
 
 if __name__ == '__main__':
