@@ -1,3 +1,5 @@
+import numpy as np
+
 from base.calcoperator import CalcOperator
 
 
