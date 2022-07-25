@@ -35,11 +35,11 @@ class MLP(Network):
                 sample = samples[j]
                 loss += self.loss.calcLossGrad(self.predict(sample=sample), label[j])
                 m += 1
-                self.layer_tail.backward(loss / m)
                 if j % batch_size == 0:
+                    self.layer_tail.backward(loss / m)
                     self.layer_header.update(lr=self.lr.rate(i, j))
                     loss = 0
-                    m += 1
+                    m = 0
             self.layer_header.update(lr=self.lr.rate(i, j))
             losses.append(self.test(samples, label))
         print("loss count", len(losses))

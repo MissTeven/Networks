@@ -1,8 +1,7 @@
 from abc import ABC
 
 import numpy as np
-
-from calcoperator import CalcOperator
+from base import *
 
 
 class Activator(CalcOperator, ABC):

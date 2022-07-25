@@ -1,36 +1,93 @@
-from base.calcoperator import CalcOperator
-import numpy as np
+import utils
+from base import *
 
 
 class ConvolutionLiner(CalcOperator):
-    def __init__(self, stride, padding, core_size, output_channel):
+    def __init__(self, filter_shape, output_channel, stride=1, padding=0):
         super().__init__()
         self.stride = stride
         self.padding = padding
-        self.core_size = core_size
+        self.filter_shape = filter_shape
         self.output_channel = output_channel
+        self.img_slice_col = None
+        self.input_data = None
         self.weights = None
-        self.biases = np.asmatrix(np.random.uniform(-1, 1, (output_channel, 1)))
+        self.weights_col = None
+        self.biases = None
+        self.output_data = None
+
+        self.weights_grad_total = None
+        self.biases_grad_total = None
+
+        self.backward_times = 0
 
     def onForward(self, input_data):
-        input_data = np.asmatrix(input_data)  # c*h*w
-        input_data = np.pad(input_data, self.padding)  # c*(h+2*p)*(w+2*p)
-        input_channel, input_h, input_w = input_data.shape
-        if self.weights is None:
-            self.weights = np.asmatrix(
-                np.random.uniform(-1, 1, (self.output_channel, input_channel, self.core_size, self.core_size)))
-        slices = []
-        for i in range(input_channel):
-            for r in range((input_h - self.core_size) / self.stride + 1):
-                for c in range((input_w - self.core_size) / self.stride + 1):
-                    slices.append(input_data[i, r:r + self.core_size, c:c + self.core_size])
-        self.weights * slices
+        input_data = np.asarray(input_data)
+        self.input_data = input_data
 
-        output_data = self.weights * input_data + self.biases
-        pass
+        N, C, H, W = input_data.shape
+        filter_h, filter_w = self.filter_shape
+
+        output_h = (H + 2 * self.padding - filter_h) // self.stride + 1
+        output_w = (W + 2 * self.padding - filter_w) // self.stride + 1
+
+        col = utils.img2col(input_data, filter_h, filter_w, self.stride,
+                            self.padding)  # (N*out_h*out_w,C*filter*h*filter_w)
+
+        if self.weights is None:
+            self.weights = np.random.ranf((self.output_channel, C, filter_h, filter_w))
+
+        col_w = self.weights.reshape(self.output_channel, -1).T  # (C*filter_h*filter_w,output_channel)
+
+        output_data = np.dot(col, col_w)  # ( N*out_h*out_w,out_chanel)
+        output_data = output_data.reshape((N, output_h, output_w, self.output_channel)).transpose((0, 3, 1, 2))
+
+        if self.biases is None:
+            self.biases = np.random.ranf((N, self.output_channel, output_h, output_w))
+
+        output_data += self.biases
+        self.img_slice_col = col  # (N*out_h*out_w,C*filter*h*filter_w)
+        self.weights_col = col_w
+
+        self.output_data = output_data  # (N,out_chanel,out_h,out_w)
+        return self.output_data
 
     def onBackward(self, loss):
-        pass
+        """
+        :param loss: (N,out_chanel,out_h,out_w)
+        :return:
+        """
+        loss_col = np.asarray(loss)
+        biases_grad = loss_col
+        N, out_chanel, out_h, out_w = loss_col.shape
+        loss_col = loss_col.transpose((0, 2, 3, 1)).reshape(N * out_h * out_w, -1)  # (N*out_h*out_w,out_channel)
 
-    def onUpdate(self, lr=0.01):
-        pass
+        col_w_grad = np.dot(loss_col.T, self.img_slice_col)  # (out_channel,C*filter_h*filter_w)
+
+        weights_grad = col_w_grad.reshape(
+            (out_chanel, self.input_data.shape[1], self.filter_shape[0], self.filter_shape[1]))
+
+        if self.weights_grad_total is None:
+            self.weights_grad_total = weights_grad
+        else:
+            self.weights_grad_total += weights_grad
+
+        if self.biases_grad_total is None:
+            self.biases_grad_total = biases_grad
+        else:
+            self.biases_grad_total += biases_grad
+
+        loss_col = np.dot(loss_col, self.weights_col.T)  # (N*out_h*out_w,C*filter_h*filter_w)
+        return utils.col2img(loss_col, img_shape=self.input_data.shape, filter_h=self.filter_shape[0],
+                             filter_w=self.filter_shape[1], stride=self.stride, pad=self.padding)
+
+
+def onUpdate(self, lr=0.01):
+
+
+if __name__ == '__main__':
+    img = np.random.randint(0, 255, size=(1, 3, 5, 5))
+    print(img.shape, img)
+    conv = ConvolutionLiner(filter_shape=(3, 3), output_channel=2)
+    result = conv.forward(img)
+    print(result.shape, result)

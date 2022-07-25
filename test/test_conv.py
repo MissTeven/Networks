@@ -34,3 +34,10 @@ if __name__ == '__main__':
     print("===============================================================")
     result = np.sum(result, axis=(3, 4, 5))
     print(result.shape, result)
+    print("===============================================================")
+    biases = np.random.ranf((output_channel, 1, 1))
+    print(biases.shape, biases)
+    result += biases
+    print(result.shape, result)
+
+
