@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def img2col(img, filter_h, filter_w, stride=1, pad=0):
+def img2col(img, filter_h, filter_w, stride=(1, 1), pad=0):
     """
     :param img: 由（ 数据量，通道，高，长 ）的4维数组构成的输入数据
     :param filter_h:滤波器的高
@@ -12,20 +12,20 @@ def img2col(img, filter_h, filter_w, stride=1, pad=0):
     """
     img = np.asarray(img)
     N, C, H, W = img.shape
-    out_h = (H + 2 * pad - filter_h) // stride + 1
-    out_w = (W + 2 * pad - filter_w) // stride + 1
+    out_h = (H + 2 * pad - filter_h) // stride[0] + 1
+    out_w = (W + 2 * pad - filter_w) // stride[1] + 1
     img = np.pad(img, pad)
     col = np.zeros((N, out_h, out_w, C, filter_h, filter_w))
     for h in range(out_h):
         for w in range(out_w):
             col[:, h, w, :, :, :] = img[:, :,
-                                    h * stride: (h * stride + filter_h),
-                                    w * stride:(w * stride + filter_w)]
+                                    h * stride[0]: (h * stride[0] + filter_h),
+                                    w * stride[1]:(w * stride[1] + filter_w)]
     col = col.reshape(N * out_h * out_w, -1)
     return col
 
 
-def col2img(col, img_shape, filter_h, filter_w, stride=1, pad=0):
+def col2img(col, img_shape, filter_h, filter_w, stride=(1, 1), pad=0):
     """
     :param col: 矩阵
     :param img_shape: 图片的尺寸，由（ 数据量，通道，高，长 ）的维数参数
@@ -36,14 +36,15 @@ def col2img(col, img_shape, filter_h, filter_w, stride=1, pad=0):
     :return:
     """
     N, C, H, W = img_shape
-    out_h = (H + pad * 2 - filter_h) // stride + 1
-    out_w = (W + pad * 2 - filter_w) // stride + 1
+    out_h = (H + pad * 2 - filter_h) // stride[0] + 1
+    out_w = (W + pad * 2 - filter_w) // stride[1] + 1
     col = col.reshape(N, out_h, out_w, C, filter_h, filter_w)
+    img = np.zeros((N, C, H + 2 * pad, W + 2 * pad))
     for h in range(out_h):
         for w in range(out_w):
             img[:, :,
-            h * stride: (h * stride + filter_h),
-            w * stride:(w * stride + filter_w)] = col[:, h, w, :, :, :]
+            h * stride[0]: (h * stride[0] + filter_h),
+            w * stride[1]:(w * stride[1] + filter_w)] = col[:, h, w, :, :, :]
     return img[:, :, pad:pad + H, pad:pad + W]
 
 
