@@ -1,5 +1,7 @@
 import numpy as np
 
+from cnn.pool import *
+
 
 def img2col(img, filter_h, filter_w, stride=(1, 1), pad=0):
     """
@@ -12,8 +14,10 @@ def img2col(img, filter_h, filter_w, stride=(1, 1), pad=0):
     """
     img = np.asarray(img)
     N, C, H, W = img.shape
+
     out_h = (H + 2 * pad - filter_h) // stride[0] + 1
     out_w = (W + 2 * pad - filter_w) // stride[1] + 1
+
     img = np.pad(img, pad)
     col = np.zeros((N, out_h, out_w, C, filter_h, filter_w))
     for h in range(out_h):
@@ -21,6 +25,7 @@ def img2col(img, filter_h, filter_w, stride=(1, 1), pad=0):
             col[:, h, w, :, :, :] = img[:, :,
                                     h * stride[0]: (h * stride[0] + filter_h),
                                     w * stride[1]:(w * stride[1] + filter_w)]
+
     col = col.reshape(N * out_h * out_w, -1)
     return col
 
@@ -49,9 +54,21 @@ def col2img(col, img_shape, filter_h, filter_w, stride=(1, 1), pad=0):
 
 
 if __name__ == '__main__':
-    img = np.random.randint(0, 255, size=(1, 3, 5, 5))
-    print(img.shape, img)
-    result = img2col(img, filter_h=3, filter_w=3, stride=2)
-    print(result.shape, result)
-    back = col2img(result, img.shape, 3, 3, stride=2, pad=0)
-    print(back.shape, back)
+    # img = np.random.randint(0, 255, size=(1, 3, 5, 5))
+    # print(img.shape, img)
+    # result = img2col(img, filter_h=3, filter_w=3, stride=(2, 2))
+    # print(result.shape, result)
+    # back = col2img(result, img.shape, 3, 3, stride=(2, 2), pad=0)
+    # print(back.shape, back)
+
+    data = np.random.randint(0, 255, size=(1, 3, 6, 6))
+    print(data.shape, data)
+    pool = MaxPool(filter_shape=(2, 2))
+    out = pool.forward(data)
+    print(out.shape, out)
+
+    loss = np.random.random_sample(size=out.shape)
+    print(loss.shape, loss)
+
+    loss_input = pool.backward(loss)
+    print(loss_input.shape, loss_input)
